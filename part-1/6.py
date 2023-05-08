@@ -5,7 +5,7 @@ input = ADC(Pin(28))
 output = PWM(Pin(16))
 output.freq(1000)
 
-MAX = 2 ** 16
+MAX = 2 ** 16 - 1
 
 while True:
     value = input.read_u16()
