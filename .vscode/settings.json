@@ -1,11 +1,11 @@
 {
-    "python.linting.enabled": true,
-    "python.languageServer": "Pylance",
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.typeshedPaths": [
-        ".vscode\\stub"
-    ],
-    "python.analysis.extraPaths": [
-        ".vscode\\stub\\stubs"
-    ]
+	"python.linting.enabled": true,
+	"python.languageServer": "Pylance",
+	"python.analysis.typeCheckingMode": "basic",
+	"python.analysis.typeshedPaths": [
+		".vscode\\stub"
+	],
+	"python.analysis.extraPaths": [
+		".vscode\\stub\\stubs"
+	]
 }
