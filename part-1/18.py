@@ -1,5 +1,5 @@
-from machine import Pin
-from time import sleep_ms, sleep_us, ticks_ms, ticks_us, ticks_diff
+from machine import Pin, time_pulse_us
+from time import sleep_ms, sleep_us, ticks_ms, ticks_diff
 from netvars import initNet, getNetVar, setNetVar
 
 ssid = ""
@@ -18,25 +18,38 @@ def getNetVarFloat(key: str):
 		return float(result)
 
 class DistanceSensor:
-	def __init__(self, triggerPinID: int | str, echoPinID: int | str):
+	def __init__(self, triggerPinID: int | str, echoPinID: int | str, echoTimeoutUS=500*2*30):
+		self.echoTimeoutUS = echoTimeoutUS
 		self.trigger = Pin(triggerPinID, Pin.OUT)
+		self.trigger.value(0)
 		self.echo = Pin(echoPinID, Pin.IN)
 
-	def measureCM(self):
-		self.trigger.off()
-		sleep_us(2)
-		self.trigger.on()
+	def _sendPulse(self):
+		self.trigger.value(0)
 		sleep_us(5)
-		self.trigger.off()
-		signalOn = 0
-		signalOff = 0
-		while self.echo.value() == 0:
-			signalOff = ticks_us()
-		while self.echo.value() == 1:
-			signalOn = ticks_us()
-		timepassed = signalOn - signalOff
-		distance = timepassed * 0.01715
-		return distance
+		self.trigger.value(1)
+		sleep_us(10)
+		self.trigger.value(0)
+		try:
+			pulseTime = time_pulse_us(self.echo, 1, self.echoTimeoutUS)
+			if pulseTime < 0:
+				MAX_RANGE_IN_CM = 500
+				pulseTime = int(MAX_RANGE_IN_CM * 29.1) # 1cm each 29.1us
+			return pulseTime
+		except OSError as ex:
+			if ex.args[0] == 110: # 110 = ETIMEDOUT
+				raise OSError('Out of range')
+			raise ex
+
+	def measureMM(self):
+		pulseTime = self._sendPulse()
+		mm = pulseTime * 100 // 582
+		return mm
+
+	def measureCM(self):
+		pulseTime = self._sendPulse()
+		cms = (pulseTime / 2) / 29.1
+		return cms
 
 sensor = DistanceSensor(15, 13)
 led = Pin(12, Pin.OUT)
